@@ -106,7 +106,7 @@ object ManagerSelection {
      */
     suspend fun scan(@Suppress("UNUSED_PARAMETER") context: Context): List<Manager> =
         withContext(Dispatchers.IO) {
-            val listedRes = ShizukuController.exec("pm list packages -f 2>/dev/null", 25_000)
+            val listedRes = ShizukuController.exec("pm list packages -f 2>/dev/null", 45_000)
             val listed = parsePackageLines(listedRes.out)
             val info = StringBuilder()
             info.append("pm -f code=").append(listedRes.code)
@@ -117,6 +117,8 @@ object ManagerSelection {
                 info.append(" [通道").append(
                     if (ShizukuController.channelDead(listedRes)) "已断，需重新连接 Shizuku" else "无输出"
                 ).append(']')
+                val sample = listedRes.out.lines().firstOrNull { it.isNotBlank() }
+                if (sample != null) info.append(" sample=").append(sample.take(80))
                 lastScanInfo = info.toString()
                 return@withContext emptyList()
             }

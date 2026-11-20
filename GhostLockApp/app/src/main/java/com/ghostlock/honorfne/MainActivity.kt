@@ -732,7 +732,16 @@ class MainActivity : AppCompatActivity() {
                 log("[mgrs] 扫描：$scanInfo")
                 if (found.isEmpty()) {
                     log("[mgrs] 未找到已安装的管理器；保持当前选择")
-                    toast("未扫描到管理器（$scanInfo）")
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("未扫描到管理器")
+                        .setMessage(
+                            "扫描结果：\n$scanInfo\n\n" +
+                                "code=-1：Shizuku 通道断开，重连 Shizuku 后再试；\n" +
+                                "parsed=0：pm 无输出，检查本应用是否已在 Shizuku 里授权；\n" +
+                                "matched=0：已安装应用里没有命中管理器包名，可把管理器包名发我补进已知表。"
+                        )
+                        .setPositiveButton("知道了", null)
+                        .show()
                     return@withContext
                 }
                 // 列表里直接标出是否带 ksud，避免用户选完才发现用不了。
