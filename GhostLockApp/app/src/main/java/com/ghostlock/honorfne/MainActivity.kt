@@ -716,19 +716,29 @@ class MainActivity : AppCompatActivity() {
     /** 扫描带 libksud.so 的已装管理器；用户选择后所有提权链共用这个包名。 */
     private fun pickManager() {
         if (managersBusy) { toast("正在处理管理器，请稍候"); return }
+        // 扫描完全走 Shizuku shell；没授权时 exec() 只会返回空输出，
+        // 旧代码会把它误报成「未扫描到管理器」，这里先把原因说清楚。
+        if (!ShizukuController.hasPermission()) {
+            log("[mgrs] 扫描管理器中止：Shizuku 未授权")
+            toast("请先连接 Shizuku 并授权，再扫描管理器")
+            return
+        }
         managersBusy = true
         lifecycleScope.launch(Dispatchers.IO) {
             val found = ManagerSelection.scan(this@MainActivity)
+            val scanInfo = ManagerSelection.lastScanInfo
             withContext(Dispatchers.Main) {
                 managersBusy = false
+                log("[mgrs] 扫描：$scanInfo")
                 if (found.isEmpty()) {
-                    log("[mgrs] 未找到带有可识别 ksud 的管理器；保持当前选择")
-                    toast("未扫描到兼容管理器（需要 APK 内含 libksud.so）")
+                    log("[mgrs] 未找到已安装的管理器；保持当前选择")
+                    toast("未扫描到管理器（$scanInfo）")
                     return@withContext
                 }
-                // 列表里直接标出配套性，避免用户选完才发现用不了。
+                // 列表里直接标出是否带 ksud，避免用户选完才发现用不了。
                 val items = found.map {
-                    "${it.label} · ${it.packageName}  [${ManagerCatalog.suitabilityText(it.packageName)}]"
+                    val ksud = if (it.hasKsud) "libksud 已确认" else "无 libksud，需自带模块"
+                    "${it.label} · ${it.packageName}  [$ksud]"
                 }.toTypedArray()
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle(R.string.mgr_title)

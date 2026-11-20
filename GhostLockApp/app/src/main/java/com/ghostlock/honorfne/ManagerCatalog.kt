@@ -66,7 +66,10 @@ object ManagerCatalog {
         Known("com.sukisu.ultra.debug", "SukiSU-Ultra（debug）", "/data/adb/ksu", false, Lineage.SUKISU_ULTRA),
         Known("com.rifsxd.ksunext", "KernelSU Next", "/data/adb/ksu", false, Lineage.KERNELSU_NEXT),
         Known("me.bmax.apatch", "APatch", "/data/adb/ap", false, Lineage.APATCH),
-        Known("com.topjohnwu.magisk", "Magisk", "/data/adb/magisk", false, Lineage.MAGISK)
+        Known("com.topjohnwu.magisk", "Magisk", "/data/adb/magisk", false, Lineage.MAGISK),
+        /* FinaSU：KernelSU 分支，包名 me.yuki.fina（见 CVE 套件 fina_load.sh）。
+           走 late-load 时会创建 /system/bin/su，故同样只认自家 kernelsu.ko。 */
+        Known("me.yuki.fina", "FinaSU", "/data/adb/ksu", false, Lineage.OTHER)
     )
 
     private val BY_PKG = KNOWN.associateBy { it.pkg }
@@ -77,7 +80,7 @@ object ManagerCatalog {
      */
     private val KEYWORDS = listOf(
         "kernelsu", "ksunext", "sukisu", "sevenk", "resukisu",
-        "bakasu", "apatch", "magisk"
+        "bakasu", "apatch", "magisk", "finasu", "yuki"
     )
 
     fun of(pkg: String?): Known? = pkg?.trim()?.let { BY_PKG[it] }
@@ -101,6 +104,7 @@ object ManagerCatalog {
             p.contains("ksunext") -> "KernelSU Next"
             p.contains("apatch") -> "APatch"
             p.contains("magisk") -> "Magisk"
+            p.contains("finasu") || p.contains("yuki.fina") -> "FinaSU"
             p.contains("kernelsu") -> "KernelSU"
             else -> pkg.substringAfterLast('.').ifBlank { pkg }
         }
